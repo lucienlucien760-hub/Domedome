@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Phonics Board</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Arial Rounded MT Bold', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f7ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        .whiteboard {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 15px solid #e0e0e0;
+            position: relative;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .control-btn:hover {
+            background: #2980b9;
+            transform: translateY(-3px);
+        }
+        
+        .word-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .word-box {
+            width: 80px;
+            height: 80px;
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            background-color: #f8fafc;
+            transition: all 0.3s ease;
+        }
+        
+        .word-box.filled {
+            border: 3px solid #2ecc71;
+            background-color: #e8f8f1;
+        }
+        
+        .letters-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .letter-block {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #a2d2ff 0%, #6ab1f7 100%);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            cursor: grab;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            user-select: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .letter-block:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        
+        .letter-block.dragging {
+            opacity: 0.7;
+            transform: scale(1.1);
+        }
+        
+        .vowel {
+            background: linear-gradient(135deg, #ffafcc 0%, #ff8fab 100%);
+        }
+        
+        .blend {
+            background: linear-gradient(135deg, #bdb2ff 0%, #9d7aff 100%);
+        }
+        
+        .instructions {
+            background: #e8f4fc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .instructions h3 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+        
+        .instructions p {
+            color: #34495e;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .box-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .box-controls input {
+            width: 60px;
+            padding: 8px;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .word-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0;
+            min-height: 50px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .word-box {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+            
+            .letter-block {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .word-box {
+                width: 50px;
+                height: 50px;
+                font-size: 1.8rem;
+            }
+            
+            .letter-block {
+                width: 40px;
+                height: 40px;
+                font-size: 1.3rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .whiteboard {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Interactive Phonics Board</h1>
+            <div class="subtitle">Drag letters to build words | A-Z + Common Blends</div>
+        </header>
+        
+        <div class="whiteboard">
+            <div class="box-controls">
+                <label for="boxCount">Number of boxes:</label>
+                <input type="number" id="boxCount" min="1" max="10" value="4">
+                <button class="control-btn" onclick="updateBoxes()">Update Boxes</button>
+            </div>
+            
+            <div class="word-boxes" id="wordBoxes">
+                <!-- Word boxes will be generated by JavaScript -->
+            </div>
+            
+            <div class="word-display" id="wordDisplay">
+                <!-- Built word will be displayed here -->
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakWord()">🔊 Speak Word</button>
+                <button class="control-btn" onclick="clearBoxes()">🗑️ Clear All</button>
+                <button class="control-btn" onclick="checkWord()">✅ Check Word</button>
+            </div>
+            
+            <div class="letters-container" id="lettersContainer">
+                <!-- Letter blocks will be generated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>💡 How to Use This Phonics Board</h3>
+            <p>1. Select how many boxes you need for your word</p>
+            <p>2. Drag letters from the bottom into the boxes to build words</p>
+            <p>3. Click "Speak Word" to hear the pronunciation</p>
+            <p>4. Click "Check Word" to see if it's a real English word</p>
+            <p>5. Use "Clear All" to start over with a new word</p>
+        </div>
+        
+        <footer>
+            <p>Interactive Phonics Board © 2023 | Designed for Elementary English Learning</p>
+        </footer>
+    </div>
+
+    <script>
+        // Letter data
+        const letters = [
+            { letter: 'A', type: 'vowel' },
+            { letter: 'B', type: 'consonant' },
+            { letter: 'C', type: 'consonant' },
+            { letter: 'D', type: 'consonant' },
+            { letter: 'E', type: 'vowel' },
+            { letter: 'F', type: 'consonant' },
+            { letter: 'G', type: 'consonant' },
+            { letter: 'H', type: 'consonant' },
+            { letter: 'I', type: 'vowel' },
+            { letter: 'J', type: 'consonant' },
+            { letter: 'K', type: 'consonant' },
+            { letter: 'L', type: 'consonant' },
+            { letter: 'M', type: 'consonant' },
+            { letter: 'N', type: 'consonant' },
+            { letter: 'O', type: 'vowel' },
+            { letter: 'P', type: 'consonant' },
+            { letter: 'Q', type: 'consonant' },
+            { letter: 'R', type: 'consonant' },
+            { letter: 'S', type: 'consonant' },
+            { letter: 'T', type: 'consonant' },
+            { letter: 'U', type: 'vowel' },
+            { letter: 'V', type: 'consonant' },
+            { letter: 'W', type: 'consonant' },
+            { letter: 'X', type: 'consonant' },
+            { letter: 'Y', type: 'consonant' },
+            { letter: 'Z', type: 'consonant' },
+            { letter: 'CH', type: 'blend' },
+            { letter: 'SH', type: 'blend' },
+            { letter: 'TH', type: 'blend' },
+            { letter: 'PH', type: 'blend' },
+            { letter: 'WH', type: 'blend' },
+            { letter: 'CK', type: 'blend' },
+            { letter: 'NG', type: 'blend' },
+            { letter: 'EE', type: 'blend' },
+            { letter: 'OO', type: 'blend' },
+            { letter: 'AI', type: 'blend' },
+            { letter: 'OA', type: 'blend' },
+            { letter: 'AY', type: 'blend' }
+        ];
+
+        // Generate letter blocks
+        const lettersContainer = document.getElementById('lettersContainer');
+        letters.forEach(item => {
+            const block = document.createElement('div');
+            block.className = `letter-block ${item.type}`;
+            block.textContent = item.letter;
+            block.draggable = true;
+            block.dataset.letter = item.letter;
+            
+            block.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('text/plain', item.letter);
+                this.classList.add('dragging');
+            });
+            
+            block.addEventListener('dragend', function() {
+                this.classList.remove('dragging');
+            });
+            
+            lettersContainer.appendChild(block);
+        });
+
+        // Generate word boxes
+        function updateBoxes() {
+            const boxCount = parseInt(document.getElementById('boxCount').value) || 4;
+            const wordBoxes = document.getElementById('wordBoxes');
+            wordBoxes.innerHTML = '';
+            
+            for (let i = 0; i < boxCount; i++) {
+                const box = document.createElement('div');
+                box.className = 'word-box';
+                box.dataset.index = i;
+                
+                box.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                });
+                
+                box.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    const letter = e.dataTransfer.getData('text/plain');
+                    this.textContent = letter;
+                    this.classList.add('filled');
+                    updateWordDisplay();
+                });
+                
+                box.addEventListener('click', function() {
+                    this.textContent = '';
+                    this.classList.remove('filled');
+                    updateWordDisplay();
+                });
+                
+                wordBoxes.appendChild(box);
+            }
+            
+            updateWordDisplay();
+        }
+
+        // Update the word display
+        function updateWordDisplay() {
+            const wordBoxes = document.querySelectorAll('.word-box');
+            let word = '';
+            
+            wordBoxes.forEach(box => {
+                word += box.textContent;
+            });
+            
+            document.getElementById('wordDisplay').textContent = word || 'Your word will appear here';
+        }
+
+        // Clear all boxes
+        function clearBoxes() {
+            const wordBoxes = document.querySelectorAll('.word-box');
+            wordBoxes.forEach(box => {
+                box.textContent = '';
+                box.classList.remove('filled');
+            });
+            updateWordDisplay();
+        }
+
+        // Speak the word
+        function speakWord() {
+            const word = document.getElementById('wordDisplay').textContent;
+            if (word && word !== 'Your word will appear here') {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1.2;
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert(`The word is: ${word}`);
+                }
+            } else {
+                alert('Please build a word first!');
+            }
+        }
+
+        // Check if the word is valid
+        function checkWord() {
+            const word = document.getElementById('wordDisplay').textContent.toLowerCase();
+            if (word && word !== 'your word will appear here') {
+                // Simple check for common words
+                const commonWords = [
+                    'cat', 'dog', 'sun', 'moon', 'fish', 'bird', 'tree', 'house', 
+                    'car', 'ball', 'book', 'pen', 'hat', 'shoe', 'boat', 'cake',
+                    'rain', 'snow', 'star', 'farm', 'park', 'home', 'school', 'friend',
+                    'mother', 'father', 'sister', 'brother', 'water', 'apple', 'banana', 'orange'
+                ];
+                
+                if (commonWords.includes(word)) {
+                    alert(`Great job! "${word.toUpperCase()}" is a real word!`);
+                } else {
+                    alert(`"${word.toUpperCase()}" might not be a common word. Try another combination!`);
+                }
+            } else {
+                alert('Please build a word first!');
+            }
+        }
+
+        // Initialize the board
+        updateBoxes();
+    </script>
+</body>
+</html>
