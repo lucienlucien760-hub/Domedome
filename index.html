@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milk Deer | v61</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+        :root { --pink: #FFD1DC; --soft-blue: #D0EFFF; --blue: #74B9FF; --green: #55E6C1; --red: #FF7675; --gold: #f1c40f; --purple: #a29bfe; --text: #576574; }
+        * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; }
+        body { margin: 0; background: linear-gradient(135deg, var(--pink) 0%, var(--soft-blue) 100%); display: flex; justify-content: center; height: 100vh; overflow: hidden; color: var(--text); }
+        #app { width: 100%; max-width: 900px; height: 100%; background: white; position: relative; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.1); }
+        .view { display: none; flex: 1; flex-direction: column; padding: 25px; overflow-y: auto; padding-bottom: 110px; }
+        .view.active { display: flex; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 15px; border: 2px solid #f0f0f0; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .btn { padding: 15px; border-radius: 18px; border: none; font-weight: 700; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 1rem; margin-bottom: 10px; transition: 0.1s; }
+        .btn:active { transform: scale(0.96); }
+        .btn-blue { background: var(--blue); box-shadow: 0 4px 0 #4a90e2; }
+        .btn-green { background: var(--green); box-shadow: 0 4px 0 #1abc9c; }
+        .btn-red { background: var(--red); box-shadow: 0 4px 0 #c0392b; }
+        .btn-purple { background: var(--purple); box-shadow: 0 4px 0 #6c5ce7; }
+        .btn-gold { background: var(--gold); box-shadow: 0 4px 0 #d4ac0d; }
+        input, select, textarea { width: 100%; padding: 15px; margin: 8px 0; border-radius: 12px; border: 2px solid #eee; font-size: 1rem; outline: none; background: #fafafa; }
+        .role-tabs { display: flex; background: #f0f0f0; border-radius: 15px; padding: 5px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 10px; font-weight: bold; }
+        .tab.active { background: var(--blue); color: white; }
+        .nav-bar { position: absolute; bottom: 0; width: 100%; height: 90px; background: white; border-top: 2px solid #EEE; display: none; justify-content: space-around; align-items: center; padding: 0 15px; }
+        
+        /* GAME STYLES */
+        #learning-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; z-index: 10000; display: none; flex-direction: column; padding: 20px; text-align: center; }
+        .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .letter-tile { width: 50px; height: 50px; background: var(--gold); color: white; border-radius: 10px; display: inline-flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; margin: 5px; cursor: pointer; box-shadow: 0 4px 0 #d4ac0d; }
+        .quiz-opt { background: white; border: 2px solid var(--blue); padding: 15px; margin: 10px 0; border-radius: 15px; cursor: pointer; }
+        .slot-box { min-height: 60px; border-bottom: 3px solid #ccc; display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .score-box { padding: 20px; border-radius: 15px; margin: 10px 0; display: none; }
+        .score-high { background: #e0ffee; border: 2px solid #00b894; color: #00b894; }
+        .score-low { background: #ffe0e0; border: 2px solid #d63031; color: #d63031; }
+        
+        /* HISTORY ITEM */
+        .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .hist-word { font-weight: bold; font-size: 1.1rem; color: var(--blue); }
+        .hist-date { font-size: 0.8rem; color: #999; }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <div id="v-login" class="view active" style="justify-content: center;">
+            <div class="card" style="max-width: 400px; margin: auto; text-align: center; border: 4px solid var(--blue);">
+                <h1>🦌 Milk Deer</h1>
+                <div class="role-tabs">
+                    <div id="t-student" class="tab active" onclick="App.setRole('student')">Student</div>
+                    <div id="t-parent" class="tab" onclick="App.setRole('parent')">Parent</div>
+                </div>
+                <input type="text" id="l-user" placeholder="Name">
+                <input type="password" id="l-pass" placeholder="Password">
+                <button class="btn btn-blue" style="width: 100%;" onclick="App.login()">Log In</button>
+                <div id="p-reg-link" style="margin-top:15px; display:none;">
+                    <button class="btn btn-green" style="width:100%" onclick="App.go('v-reg-p')">Register Parent</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="v-reg-p" class="view">
+            <h1>New Parent</h1>
+            <div class="card">
+                <input type="text" id="rp-name" placeholder="Name">
+                <input type="password" id="rp-pass" placeholder="Password">
+                <button class="btn btn-blue" style="width:100%" onclick="App.regParent()">Create Account</button>
+                <button class="btn btn-red" style="width:100%" onclick="App.go('v-login')">Back</button>
+            </div>
+        </div>
+
+        <div id="v-parent" class="view">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Parent Dashboard</h2>
+                <button class="btn btn-red" onclick="App.logout()">Logout</button>
+            </div>
+            <div class="card" style="background:var(--soft-blue);">
+                <h3>1. Add Student</h3>
+                <input type="text" id="p-s-name" placeholder="Student Name">
+                <input type="password" id="p-s-pass" placeholder="Student Password">
+                <button class="btn btn-green" style="width:100%" onclick="App.regStudent()">Save Student</button>
+            </div>
+            <div class="card">
+                <h3>2. Assign Mission</h3>
+                <select id="p-select-s" onchange="App.loadHist()"></select>
+                <input type="date" id="p-due-date">
+                <textarea id="p-word-input" rows="4" placeholder="Word | Syllable | Def | Sentence"></textarea>
+                <button class="btn btn-blue" style="width:100%" onclick="App.assign()">Assign Mission</button>
+            </div>
+            <div class="card">
+                <h3>Student History</h3>
+                <div id="p-hist-box" style="max-height: 200px; overflow-y: auto;">Select a student to see history.</div>
+            </div>
+        </div>
+
+        <div id="v-student" class="view">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Hi, <span id="s-title"></span>!</h2>
+                <div style="background:var(--gold); padding:10px 15px; border-radius:15px; color:white; font-weight:bold;">🪙 <span id="s-coins">0</span></div>
+            </div>
+            <div class="card" style="text-align:center; margin-top:30px;">
+                <p id="s-due-display" style="background:var(--red); color:white; display:none; padding:5px; border-radius:10px; font-size:0.9rem;"></p>
+                <h1 id="s-mission-word" style="font-size:2.5rem; margin:20px 0;">Loading...</h1>
+                <div id="mission-ready" style="display:none;">
+                    <button class="btn btn-blue" style="width:100%; height:80px; font-size:1.2rem;" onclick="Game.start()">🚀 START MISSION</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="v-s-hist" class="view">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>My History 📜</h2>
+                <div style="background:var(--gold); padding:10px 15px; border-radius:15px; color:white; font-weight:bold;">🪙 <span id="s-coins-hist">0</span></div>
+            </div>
+            <div class="card" id="s-hist-list" style="padding:0;">
+            </div>
+        </div>
+
+        <div id="learning-overlay">
+            <div class="game-header">
+                <span id="g-step-tag" style="font-weight:bold; color:var(--blue);">STEP 1/7</span>
+                <button onclick="Game.quit()" style="background:none; border:none; color:var(--red); font-weight:bold; cursor:pointer;">❌ Quit</button>
+            </div>
+            <div id="g-content" style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow-y:auto;"></div>
+            <div style="margin-top:15px;">
+                <button id="g-next-btn" class="btn btn-blue" style="width:100%;" onclick="Game.next()">NEXT ▶</button>
+            </div>
+        </div>
+
+        <nav id="nav" class="nav-bar">
+            <button class="btn btn-blue" onclick="App.go('v-student')">🏠 Home</button>
+            <button class="btn btn-purple" onclick="App.showStudentHist()">📜 History</button>
+            <button class="btn btn-red" onclick="App.logout()">🚪 Exit</button>
+        </nav>
+    </div>
+
+    <script>
+        const App = {
+            DB_KEY: 'MILK_DEER_V61_HIST', db: null, curP: null, curS: null, role: 'student',
+        
+            init() {
+                const saved = localStorage.getItem(this.DB_KEY);
+                this.db = saved ? JSON.parse(saved) : { parents: {}, session: null };
+                if (this.db.session) {
+                    this.curP = this.db.session.p; this.curS = this.db.session.s;
+                    if (this.curS) { this.updateSView(); document.getElementById('nav').style.display='flex'; this.go('v-student'); }
+                    else if (this.curP) { this.updatePView(); this.go('v-parent'); }
+                }
+            },
+            save() { localStorage.setItem(this.DB_KEY, JSON.stringify(this.db)); },
+            go(id) { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById(id).classList.add('active'); },
+            setRole(r) { 
+                this.role = r;
+                document.getElementById('t-student').className = (r==='student'?'tab active':'tab');
+                document.getElementById('t-parent').className = (r==='parent'?'tab active':'tab');
+                document.getElementById('p-reg-link').style.display = (r==='parent'?'block':'none');
+            },
+            login() {
+                const u = document.getElementById('l-user').value.trim(); const p = document.getElementById('l-pass').value;
+                if(this.role === 'parent') {
+                    if(this.db.parents[u] && this.db.parents[u].pass === p) {
+                        this.curP = u; this.db.session = {p:u, s:null}; this.save(); this.updatePView(); this.go('v-parent');
+                    } else alert("Parent Login Failed");
+                } else {
+                    for(let pr in this.db.parents) {
+                        let k = this.db.parents[pr].kids[u.toLowerCase()];
+                        if(k && k.pass === p) {
+                            this.curP = pr; this.curS = u.toLowerCase(); this.db.session = {p:pr, s:this.curS}; this.save(); this.updateSView();
+                            document.getElementById('nav').style.display='flex'; this.go('v-student'); return;
+                        }
+                    }
+                    alert("Student Login Failed");
+                }
+            },
+            logout() { this.db.session = null; this.save(); this.curP = null; this.curS = null; document.getElementById('nav').style.display = 'none'; this.go('v-login'); },
+            regParent() {
+                const n = document.getElementById('rp-name').value.trim(); const p = document.getElementById('rp-pass').value;
+                if(n && p) {
+                    if(this.db.parents[n]) return alert("Name taken");
+                    this.db.parents[n] = { pass: p, kids: {} }; this.curP = n; this.db.session = {p:n, s:null}; this.save(); this.updatePView(); this.go('v-parent');
+                }
+            },
+            regStudent() {
+                const n = document.getElementById('p-s-name').value.toLowerCase().trim(); const p = document.getElementById('p-s-pass').value;
+                if(n && p) { this.db.parents[this.curP].kids[n] = { pass:p, coins:0, queue:[], history:[] }; this.save(); this.updatePView(); alert("Student Saved!"); }
+            },
+            assign() {
+                const s = document.getElementById('p-select-s').value; const due = document.getElementById('p-due-date').value; const raw = document.getElementById('p-word-input').value;
+                if(!s || !raw) return alert("Please fill all fields");
+                raw.split('\n').forEach(line => {
+                    const pts = line.split('|');
+                    if(pts.length >= 4) this.db.parents[this.curP].kids[s].queue.push({w:pts[0].trim(), s:pts[1].trim(), d:pts[2].trim(), e:pts[3].trim(), due:due});
+                });
+                this.save(); this.loadHist(); alert("Mission Assigned!");
+            },
+            updatePView() {
+                const sel = document.getElementById('p-select-s'); sel.innerHTML = '<option value="">-- Select Student --</option>';
+                for(let k in this.db.parents[this.curP].kids) sel.innerHTML += `<option value="${k}">${k}</option>`;
+            },
+            loadHist() {
+                const s = document.getElementById('p-select-s').value; if(!s) return;
+                const h = this.db.parents[this.curP].kids[s].history || [];
+                document.getElementById('p-hist-box').innerHTML = h.length ? h.map(i => `<div class="hist-item"><span class="hist-word">${i.w}</span><span class="hist-date">${i.date}</span></div>`).join('') : "No history yet.";
+            },
+            updateSView() {
+                const s = this.db.parents[this.curP].kids[this.curS];
+                document.getElementById('s-title').innerText = this.curS;
+                document.getElementById('s-coins').innerText = s.coins;
+                document.getElementById('s-coins-hist').innerText = s.coins;
+                const m = s.queue[0];
+                if(m) {
+                    document.getElementById('s-mission-word').innerText = m.w;
+                    document.getElementById('mission-ready').style.display = 'block';
+                    if(m.due) { document.getElementById('s-due-display').innerText = "DUE: " + m.due; document.getElementById('s-due-display').style.display="inline-block"; }
+                } else {
+                    document.getElementById('s-mission-word').innerText = "All Missions Done!";
+                    document.getElementById('mission-ready').style.display = 'none';
+                }
+            },
+            showStudentHist() {
+                const s = this.db.parents[this.curP].kids[this.curS];
+                const list = document.getElementById('s-hist-list');
+                list.innerHTML = s.history.length ? s.history.map(i => `<div class="hist-item"><span class="hist-word">${i.w}</span><span class="hist-date">${i.date}</span></div>`).join('') : '<div style="padding:20px; text-align:center;">No words mastered yet. Start a mission!</div>';
+                this.go('v-s-hist');
+            }
+        };
+        
+        const Game = {
+            step: 1, m: null, pool: [], answer: [],
+            start() { this.m = App.db.parents[App.curP].kids[App.curS].queue[0]; this.step = 1; document.getElementById('learning-overlay').style.display='flex'; this.render(); },
+            quit() { if(confirm("Quit mission?")) document.getElementById('learning-overlay').style.display='none'; },
+            speak(txt, rate=0.8) { const u = new SpeechSynthesisUtterance(txt); u.rate = rate; window.speechSynthesis.speak(u); },
+            listen() {
+                const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if(!R) return alert("Mic not supported.");
+                const box = document.getElementById('mic-result');
+                box.style.display = 'block'; box.innerHTML = '👂 Listening...';
+                const rec = new R(); rec.lang = 'en-US';
+                rec.onresult = (e) => { 
+                    const heard = e.results[0][0].transcript.toLowerCase().trim();
+                    const target = this.m.w.toLowerCase().trim();
+                    let score = (heard === target) ? 100 : (heard.includes(target) ? 85 : 0);
+                    box.className = (score >= 85) ? 'score-box score-high' : 'score-box score-low';
+                    box.innerHTML = `<h2>${score}/100</h2><p>${score >= 85 ? 'PERFECT!' : 'I heard: ' + heard}</p>`;
+                    if(score >= 85) document.getElementById('g-next-btn').style.display = 'block';
+                };
+                rec.start();
+            },
+            render() {
+                const box = document.getElementById('g-content');
+                document.getElementById('g-step-tag').innerText = `STEP ${this.step}/7`;
+                document.getElementById('g-next-btn').style.display = [2, 4, 5].includes(this.step) ? 'none' : 'block';
+                let h = "";
+                if(this.step===1) h = `<h1>${this.m.w}</h1><h3 style="color:var(--blue)">${this.m.d}</h3><p>"${this.m.e}"</p>`;
+                else if(this.step===2) h = `<h1>${this.m.w}</h1><button class="btn btn-purple" style="width:100%" onclick="Game.speak('${this.m.w}')">🔊 Listen</button><button class="btn btn-red" style="width:100%" onclick="Game.listen()">🎙️ Speak</button><div id="mic-result" class="score-box"></div>`;
+                else if(this.step===3) h = `<h1>${this.m.s}</h1><button class="btn btn-purple" style="width:100%" onclick="Game.speak('${this.m.s.replace(/-/g, ' ')}', 0.5)">🔊 Listen Slow</button>`;
+                else if(this.step===4) h = `<h2>Definition of "${this.m.w}"?</h2><div class="quiz-opt" onclick="Game.checkQuiz(true)">${this.m.d}</div><div class="quiz-opt" onclick="Game.checkQuiz(false)">A giant space rock</div>`;
+                else if(this.step===5) { h = `<h2>Build: ${this.m.w}</h2><div id="slot-area" class="slot-box"></div><div id="pool-area"></div><button class="btn btn-gold" onclick="Game.resetPuzzle()">Reset</button>`; setTimeout(this.initPuzzle, 100); }
+                else if(this.step===6) h = `<h2>Type the word:</h2><input type="text" id="g-in" style="font-size:1.5rem; text-align:center;">`;
+                else if(this.step===7) h = `<h2>Final Check:</h2><input type="text" id="g-in" style="font-size:1.5rem; text-align:center;">`;
+                box.innerHTML = h;
+            },
+            initPuzzle() { Game.answer = []; Game.pool = Game.m.w.split('').sort(() => Math.random() - 0.5); Game.renderPool(); },
+            renderPool() {
+                const pD = document.getElementById('pool-area'), sD = document.getElementById('slot-area');
+                pD.innerHTML = Game.pool.map((l,i) => `<div class="letter-tile" onclick="Game.moveLetter(${i})">${l}</div>`).join('');
+                sD.innerHTML = Game.answer.map(l => `<div class="letter-tile" style="background:var(--blue)">${l}</div>`).join('');
+                if(Game.answer.join('').toLowerCase() === Game.m.w.toLowerCase()) { sD.innerHTML += '<div style="width:100%; color:green;">Correct!</div>'; document.getElementById('g-next-btn').style.display='block'; }
+            },
+            moveLetter(i) { Game.answer.push(Game.pool[i]); Game.pool.splice(i, 1); Game.renderPool(); },
+            resetPuzzle() { Game.initPuzzle(); },
+            checkQuiz(corr) { if(corr) { alert("Correct!"); document.getElementById('g-next-btn').style.display='block'; } else alert("Try again!"); },
+            next() {
+                if(this.step >= 6 && document.getElementById('g-in').value.trim().toLowerCase() !== this.m.w.toLowerCase()) return alert("Spelling incorrect!");
+                if(this.step < 7) { this.step++; this.render(); }
+                else {
+                    const s = App.db.parents[App.curP].kids[App.curS];
+                    s.coins += 10; s.queue.shift(); s.history.unshift({ w: this.m.w, date: new Date().toLocaleDateString() });
+                    App.save(); document.getElementById('learning-overlay').style.display='none'; App.updateSView(); alert("MASTERED! +10 Coins");
+                }
+            }
+        };
+        App.init();
+    </script>
+</body>
+
+</html>
